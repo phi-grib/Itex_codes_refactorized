@@ -10,7 +10,7 @@ setup(
    license='GNU',
    long_description=long_description,
    author='Eric March Vila, Giacomo Ferretti',
-   author_email='eric.march@upf.edu','gferretti85@gmail.com',
+   author_email='eric.march@upf.edu, gferretti85@gmail.com',
    url='https://github.com/phi-grib/Itex_codes_refactorized',
    packages=['UpdateDB']
 )
