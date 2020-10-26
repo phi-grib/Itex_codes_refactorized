@@ -149,15 +149,16 @@ class Connector():
 
             :return sub_ann_struc:
         """
-
+        #updated
         sub_ann_struc = pd.read_sql_query("""SELECT class_name, preferred_name, mol_formula, 
-                                            str."structure", ep.cmr, ep.pbt, ep.vpvb, 
-                                            ep.sensitiser, ep.endocrine_disruptor
-                                            FROM substance sub
-                                            left join substance_structure str on str.subs_id = sub.id
-                                            left join endpoint_annotation ep on ep.subs_id = sub.id
-                                            where str."structure" is not null  
-                                            order by sub.id ASC""", self.conn)
+                                                str."structure", ep.cmr, ep.pbt, ep.vpvb, 
+                                                ep.sensitiser, ep.endocrine_disruptor
+                                                FROM substance sub
+                                                left join chem_id cid on sub.chem_id = cid.id 
+                                                left join substance_structure str on str.chem_id = cid.id
+                                                left join endpoint_annotation ep on ep.chem_id = cid.id
+                                                where str."structure" is not null  
+                                                order by sub.id asc;""", self.conn)
         
         return sub_ann_struc
 
@@ -291,8 +292,8 @@ class Connector():
 
             :return big_regulations_table:
         """
-
-        big_regulations_table = pd.read_sql_query("""SELECT id, subs_id, reg_country_id, reg_type_id, gen_reg_id, 
+        #updated
+        big_regulations_table = pd.read_sql_query("""SELECT id, chem_id, reg_country_id, reg_type_id, gen_reg_id, 
                                                     spec_reg_id, subspec_reg_id, special_cases_id, additional_information_id, 
                                                     chem_id_name, chem_type_id, regulation_id FROM public.regulations;""",self.conn)
         
@@ -304,25 +305,22 @@ class Connector():
 
             :return regulations_per_substance:
         """
-
-        regulations_per_substance = pd.read_sql_query("""SELECT reg.id, reg.subs_id, sub.class_name, sub.preferred_name, 
-                                                    rco.country, rt."type", rg.general_regulation_name, 
-                                                    rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
-                                                    rsc.special_cases_name, addr.additional_information_name, cid."name" as chemical_identifier, 
-                                                    ct."type" as type_of_identifier, regn.names
-                                                    FROM regulations reg
-                                                    LEFT JOIN substance sub ON sub.id = reg.subs_id
-                                                    left join regulation_country rco on rco.id = reg.reg_country_id
-                                                    left join regulation_type rt on rt.id = reg.reg_type_id
-                                                    left join general_regulation rg on rg.id = reg.gen_reg_id
-                                                    left join specific_regulation rspec on rspec.id = reg.spec_reg_id
-                                                    LEFT JOIN subspecific_regulation rsub ON rsub.id = reg.subspec_reg_id
-                                                    left join special_cases_regulation rsc on rsc.id = reg.special_cases_id
-                                                    left join additional_information_regulation addr on addr.id = reg.additional_information_id
-                                                    LEFT JOIN chem_id cid ON cid.subs_id = sub.id
-                                                    LEFT JOIN chem_type ct ON ct.id = cid.chem_type_id
-                                                    LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id
-                                                    order by reg.id asc""",self.conn)
+        #updated
+        regulations_per_substance = pd.read_sql_query("""SELECT reg.id, cid.subs_id, sub.class_name, sub.preferred_name, rco.country, rt."type", rg.general_regulation_name, rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
+                                                            rsc.special_cases_name, addr.additional_information_name, cid."name" as chemical_identifier, ct."type" as type_of_identifier, regn.names
+                                                            FROM regulations reg
+                                                            LEFT JOIN chem_id cid ON cid.id = reg.chem_id
+                                                            LEFT JOIN substance sub ON sub.chem_id = cid.id
+                                                            left join regulation_country rco on rco.id = reg.reg_country_id
+                                                            left join regulation_type rt on rt.id = reg.reg_type_id
+                                                            left join general_regulation rg on rg.id = reg.gen_reg_id
+                                                            left join specific_regulation rspec on rspec.id = reg.spec_reg_id
+                                                            LEFT JOIN subspecific_regulation rsub ON rsub.id = reg.subspec_reg_id
+                                                            left join special_cases_regulation rsc on rsc.id = reg.special_cases_id
+                                                            left join additional_information_regulation addr on addr.id = reg.additional_information_id
+                                                            LEFT JOIN chem_type ct ON ct.id = cid.chem_type_id
+                                                            LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id
+                                                            order by reg.id asc;""",self.conn)
 
         return regulations_per_substance
     
@@ -332,7 +330,7 @@ class Connector():
 
             :return regulations_with_id:
         """
-
+        
         regulations_with_id = pd.read_sql_query("""SELECT DISTINCT rco.country, rco.id as "country_id", rt."type", rt.id as "reg_type_id",
                                                     rg.general_regulation_name, rg.id as "general_reg_id", rspec.specific_regulation_name,
                                                     rspec.id as "spec_reg_id", rsub.subspecific_regulation_name, rsub.id as "subspec_reg_id",
