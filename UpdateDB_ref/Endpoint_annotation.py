@@ -45,68 +45,68 @@ class Endpoint(UpdateDB):
             super().compoundDB_connection()
             self.db_tag = 'cr'
     
-    def get_annotations_for_substance(self, substances_id: np.ndarray, endpoint_annotations: dict) -> pd.DataFrame:
+    def get_annotations_for_chem_id(self, chemical_ids: np.ndarray, endpoint_annotations: dict) -> pd.DataFrame:
         """
-            For each substance id in the list, checks regulations table if there are certain annotations,
+            For each chemical id in the list, checks regulations table if there are certain annotations,
             which are the values of the dict endpoint_annotations. 
 
-            :param substances_id:
+            :param chemical_ids:
             :param endpoint_annotations: dictionary which keys are endpoints (CMR, PBT...) and values are
                                         the hazard annotations associated to that endpoints
 
-            :return substance_endpoint_annotations:
+            :return chemid_endpoint_annotations:
         """
 
-        substance_endpoint_annotations = pd.DataFrame(index=range(len(substances_id)))
+        chemid_endpoint_annotations = pd.DataFrame(index=range(len(chemical_ids)))
        
-        for i, id_ in enumerate(substances_id):
-            substance_endpoint_annotations.loc[substance_endpoint_annotations.index == i, 'subs_id'] = id_
+        for i, id_ in enumerate(chemical_ids):
+            chemid_endpoint_annotations.loc[chemid_endpoint_annotations.index == i, 'chem_id'] = id_
             for endpoint in endpoint_annotations.keys():
                 annotations = endpoint_annotations[endpoint]
                 final_annotation = self.get_annotation_per_endpoint(id_, endpoint, annotations)
-                substance_endpoint_annotations.loc[substance_endpoint_annotations.index == i, endpoint] = final_annotation
+                chemid_endpoint_annotations.loc[chemid_endpoint_annotations.index == i, endpoint] = final_annotation
         
-        return substance_endpoint_annotations
+        return chemid_endpoint_annotations
 
-    def get_annotation_per_endpoint(self, subs_id: int, endpoint: str, annotations: list) -> str:
+    def get_annotation_per_endpoint(self, chem_id: int, endpoint: str, annotations: list) -> str:
         """
             Checks if there are annotations for that substance id
 
-            :param subs_id:
+            :param chem_id:
             :param annotations:
 
             :return final_annotation:
         """
 
-        substance_annotations = self.check_presence_in_table(subs_id, annotations)
+        chemid_annotations = self.check_presence_in_table(chem_id, annotations)
        
-        if substance_annotations.empty:
+        if chemid_annotations.empty:
             final_annotation = 'No information'
         else:
             if self.db_tag == 'cii':
-                final_annotation = self.check_source_of_annotation(endpoint, substance_annotations)
+                final_annotation = self.check_source_of_annotation(endpoint, chemid_annotations)
             elif self.db_tag == 'cr':
-                final_annotation = self.check_cr_source(endpoint, substance_annotations)
+                final_annotation = self.check_cr_source(endpoint, chemid_annotations)
 
         return final_annotation
 
-    def get_total_annotations_per_endpoint(self, substance_endpoint_annotations: pd.DataFrame) -> pd.DataFrame:
+    def get_total_annotations_per_endpoint(self, chemid_endpoint_annotations: pd.DataFrame) -> pd.DataFrame:
         """
             Calculates the total number of annotations per endpoint in the input dataframe
 
-            :param substance_endpoint_annotations:
+            :param chemid_endpoint_annotations:
 
             :return total_annotations_endpoint:
         """
 
-        endpoints = substance_endpoint_annotations.columns[1:]
+        endpoints = chemid_endpoint_annotations.columns[1:]
         total_annotations_endpoint = pd.DataFrame(index=range(len(endpoints)))
 
         for i, endpoint in enumerate(endpoints):
-            yes_count = len(substance_endpoint_annotations.loc[substance_endpoint_annotations[endpoint] == 'YES',endpoint])
-            pen_count = len(substance_endpoint_annotations.loc[substance_endpoint_annotations[endpoint] == 'Pending',endpoint])
-            no_count = len(substance_endpoint_annotations.loc[substance_endpoint_annotations[endpoint] == 'NO',endpoint])
-            no_info_count = len(substance_endpoint_annotations.loc[substance_endpoint_annotations[endpoint] == 'No information',endpoint])
+            yes_count = len(chemid_endpoint_annotations.loc[chemid_endpoint_annotations[endpoint] == 'YES',endpoint])
+            pen_count = len(chemid_endpoint_annotations.loc[chemid_endpoint_annotations[endpoint] == 'Pending',endpoint])
+            no_count = len(chemid_endpoint_annotations.loc[chemid_endpoint_annotations[endpoint] == 'NO',endpoint])
+            no_info_count = len(chemid_endpoint_annotations.loc[chemid_endpoint_annotations[endpoint] == 'No information',endpoint])
 
             total_annotations_endpoint.loc[total_annotations_endpoint.index == i, 'Endpoints'] = endpoint
             total_annotations_endpoint.loc[total_annotations_endpoint.index == i, 'YES'] = yes_count
@@ -116,23 +116,23 @@ class Endpoint(UpdateDB):
 
         return total_annotations_endpoint
 
-    def check_presence_in_table(self, subs_id: int, annotations: str) -> pd.DataFrame:
+    def check_presence_in_table(self, chem_id: int, annotations: str) -> pd.DataFrame:
         """
             Ask CII/CR if there are annotations for the input substance
 
-            :param subs_id:
+            :param chem_id:
             :param annotations:
 
             :return substance_annotations:
         """
 
         if self.db_tag == 'cii':
-            query_ = """SELECT reg.id, reg.subs_id, rco.country, rt."type", rg.general_regulation_name, 
+            query_ = """SELECT reg.id, ci.id as chem_id, rco.country, rt."type", rg.general_regulation_name, 
                         rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
-                        rsc.special_cases_name, addr.additional_information_name, reg.chem_id_name as chemical_identifier, 
-                        ct."type" as type_of_identifier, regn.names
+                        rsc.special_cases_name, addr.additional_information_name, regn.names
                         FROM regulations reg
-                        LEFT JOIN substance sub ON sub.id = reg.subs_id
+                        left join chem_id ci on ci.id = reg.chem_id 
+                        LEFT JOIN substance sub ON sub.chem_id = ci.id
                         left join regulation_country rco on rco.id = reg.reg_country_id
                         left join regulation_type rt on rt.id = reg.reg_type_id
                         left join general_regulation rg on rg.id = reg.gen_reg_id
@@ -142,7 +142,7 @@ class Endpoint(UpdateDB):
                         left join additional_information_regulation addr on addr.id = reg.additional_information_id
                         LEFT JOIN chem_type ct ON ct.id = reg.chem_type_id
                         LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id 
-                        WHERE reg.subs_id = {} and regn.names in {}""".format(subs_id, tuple(annotations))
+                        WHERE reg.chem_id = {} and regn.names in {}""".format(subs_id, tuple(annotations))
             
             conn = self.conn
         
@@ -159,21 +159,21 @@ class Endpoint(UpdateDB):
             
             conn = self.compounddb_conn
         
-        substance_annotations = pd.read_sql_query(query_, conn)
-        substance_annotations.drop_duplicates(inplace=True)
+        chem_id_annotations = pd.read_sql_query(query_, conn)
+        chem_id_annotations.drop_duplicates(inplace=True)
 
-        return substance_annotations
+        return chem_id_annotations
     
-    def check_cr_source(self, endpoint: str, substance_annotations: pd.DataFrame) -> str:
+    def check_cr_source(self, endpoint: str, chem_id_annotations: pd.DataFrame) -> str:
         """
             Checks which source the annotation comes from in CR database.
 
-            :param substance_annotations:
+            :param chem_id_annotations:
 
             :return final_annotation:
         """
 
-        sources = substance_annotations['source_name'].drop_duplicates()
+        sources = chem_id_annotations['source_name'].drop_duplicates()
 
         # List of sources that should be checked. 
         # Decision taken:
@@ -197,17 +197,17 @@ class Endpoint(UpdateDB):
 
         return final_annotation
 
-    def check_source_of_annotation(self, endpoint: str, substance_annotations: pd.DataFrame) -> str:
+    def check_source_of_annotation(self, endpoint: str, chem_id_annotations: pd.DataFrame) -> str:
         """
             Checks which source the annotation comes from and assign either a YES or a Pending annotation
             for the endpoint of interest.
 
-            :param substance_annotations:
+            :param chem_id_annotations:
 
             :return final_annotation
         """
         
-        sources = substance_annotations[['general_regulation_name','specific_regulation_name','subspecific_regulation_name',
+        sources = chem_id_annotations[['general_regulation_name','specific_regulation_name','subspecific_regulation_name',
         'special_cases_name','additional_information_name','names']].drop_duplicates()
         
         # We use this lists to check the presence of annotations in these regulations,
@@ -294,35 +294,35 @@ class Endpoint(UpdateDB):
         
         return annotation
     
-    def add_endpoint_annotations_to_database(self, substance_endpoint_annotations:pd.DataFrame):
+    def add_endpoint_annotations_to_database(self, chemid_endpoint_annotations:pd.DataFrame):
         """
             Adds dataframe information to CII database.
 
-            :param substance_endpoint_annotations
+            :param chemid_endpoint_annotations:
         """
 
-        for i, row in substance_endpoint_annotations.iterrows():
-            subs_id = int(row['subs_id'])
+        for i, row in chemid_endpoint_annotations.iterrows():
+            chem_id = int(row['chem_id'])
             cmr = row['CMR']
             pbt = row['PBT']
             vpvb = row['vPvB']
             endoc = row['Endocrine Disruptor']
             
-            self.add_annotation(subs_id,cmr,pbt,vpvb,endoc)
+            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc)
     
-    def add_annotation(self, subs_id: int, cmr: str, pbt: str, vpvb: str, endoc: str):
+    def add_annotation(self, chem_id: int, cmr: str, pbt: str, vpvb: str, endoc: str):
         """
             Adds new annotation into database.
             Checks if there is already one and updates it if necessary
 
-            :param subs_id:
+            :param chem_id:
             :param cmr:
             :param pbt:
             :parab vpvb:
             :param endoc:
         """
 
-        ep_cmd = "SELECT * FROM endpoint_annotation WHERE subs_id = '{}';".format(subs_id)
+        ep_cmd = "SELECT * FROM endpoint_annotation WHERE chem_id = '{}';".format(chem_id)
         ep_list = self.check_presence_or_absence_endpoint(ep_cmd)
         
         if ep_list:
@@ -330,30 +330,30 @@ class Endpoint(UpdateDB):
             pbt_db = ep_list[3]
             vpvb_db = ep_list[4]
             endoc_db = ep_list[5]
-            self.update_annotations('cmr',cmr_db,cmr,subs_id)
-            self.update_annotations('pbt',pbt_db,pbt,subs_id)
-            self.update_annotations('vpvb',vpvb_db,vpvb,subs_id)
-            self.update_annotations('endocrine_disruptor',endoc_db,endoc,subs_id)
+            self.update_annotations('cmr',cmr_db,cmr,chem_id)
+            self.update_annotations('pbt',pbt_db,pbt,chem_id)
+            self.update_annotations('vpvb',vpvb_db,vpvb,chem_id)
+            self.update_annotations('endocrine_disruptor',endoc_db,endoc,chem_id)
         else:
             max_id_cmd = """SELECT max(id) from endpoint_annotation"""
-            insert_query = """INSERT INTO public.endpoint_annotation (id, subs_id, cmr, pbt, vpvb, endocrine_disruptor)
+            insert_query = """INSERT INTO public.endpoint_annotation (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor)
                              VALUES ({},{},'{}','{}','{}','{}')"""
-            self.insert_in_database(max_id_cmd, insert_query,subs_id,cmr,pbt,vpvb,endoc)
+            self.insert_in_database(max_id_cmd, insert_query,chem_id,cmr,pbt,vpvb,endoc)
 
-    def update_annotations(self, endpoint: str, old_endpoint_annotation: str, new_endpoint_annotation: str, subs_id: int):
+    def update_annotations(self, endpoint: str, old_endpoint_annotation: str, new_endpoint_annotation: str, chem_id: int):
         """
             Updates old annotations with new ones if those are different from each other.
 
             :param endpoint: endpoint to update (CMR, PBT, vPvB, Endocrine disruptor)
             :param old_endpoint_annotation: annotation in database
             :param new_endpoint_annotation: annotation assigned after algorithm
-            :param subs_id: substance id of the compound in the database
+            :param chem_id: substance id of the compound in the database
         """
 
         if old_endpoint_annotation == 'YES' or old_endpoint_annotation == new_endpoint_annotation:
             pass
         else:
-            update_query = """UPDATE endpoint_annotation SET {} = '{}' WHERE subs_id = '{}';""".format(endpoint, new_endpoint_annotation,subs_id)
+            update_query = """UPDATE endpoint_annotation SET {} = '{}' WHERE chem_id = '{}';""".format(endpoint, new_endpoint_annotation,chem_id)
             self.curs.execute(update_query)
             self.conn.commit()
 
