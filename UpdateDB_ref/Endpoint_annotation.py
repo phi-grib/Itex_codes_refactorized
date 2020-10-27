@@ -142,7 +142,7 @@ class Endpoint(UpdateDB):
                         left join additional_information_regulation addr on addr.id = reg.additional_information_id
                         LEFT JOIN chem_type ct ON ct.id = reg.chem_type_id
                         LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id 
-                        WHERE reg.chem_id = {} and regn.names in {}""".format(subs_id, tuple(annotations))
+                        WHERE reg.chem_id = {} and regn.names in {}""".format(chem_id, tuple(annotations))
             
             conn = self.conn
         
@@ -155,7 +155,7 @@ class Endpoint(UpdateDB):
                         left join subs_ann on subs_ann.subsid = sub.id
                         left join annotation on annotation.id = subs_ann.annid
                         where synonym.name = '{}'
-                        and subs_ann.original_annotation in {}""".format(subs_id,tuple(annotations))
+                        and subs_ann.original_annotation in {}""".format(chem_id,tuple(annotations))
             
             conn = self.compounddb_conn
         
