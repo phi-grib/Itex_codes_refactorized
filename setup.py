@@ -12,5 +12,5 @@ setup(
    author='Eric March Vila, Giacomo Ferretti',
    author_email='eric.march@upf.edu, gferretti85@gmail.com',
    url='https://github.com/phi-grib/Itex_codes_refactorized',
-   packages=['UpdateDB']
+   packages=['UpdateDB_ref']
 )
