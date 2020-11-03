@@ -123,11 +123,13 @@ class Connector():
             :return substance_structures:
         """
 
+        # Updated
+
         substance_structures = pd.read_sql_query("""SELECT s.class_name_curated, s.preferred_name_curated, cid."name" , struc."structure",
                                                 struc.structure_curated, struc.substance_type_id
                                                 FROM substance_structure struc
                                                 left join chem_id cid on cid.id = struc.chem_id 
-                                                left join substance s on s.id = struc.subs_id 
+                                                left join substance s on s.chem_id = struc.chem_id 
                                                 order by struc.subs_id ASC""", self.conn)
 
         return substance_structures
