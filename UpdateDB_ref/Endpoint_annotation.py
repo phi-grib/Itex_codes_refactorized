@@ -11,7 +11,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import PandasTools
 from typing import Union, Optional
 
-from UpdateDB.Update_CII import UpdateDB
+from UpdateDB_ref.Update_CII import UpdateDB
 
 class Endpoint(UpdateDB):
     """
