@@ -107,7 +107,7 @@ class Connector():
             :return substances_chem_id:
         """
         # Updated
-        print('cacaaaaa')
+        
         substances_chem_id = pd.read_sql_query("""SELECT sub.id as substance_id, sub.chem_id as chemical_id, sub.class_name_curated, sub.preferred_name_curated, 
                                                 sub.mol_formula_curated, cid."name" as Chemical_identifier, ct."type" as Type_of_identifier
                                                 FROM substance sub
