@@ -376,53 +376,53 @@ class Endpoint(UpdateDB):
         return endpoints_   
 
 
-    def get_sdf_files_from_endpoint_annotation(self):
-        """
-            Generates sdf files, both for train and test, from endpoint annotations table.
+    # def get_sdf_files_from_endpoint_annotation(self):
+    #     """
+    #         Generates sdf files, both for train and test, from endpoint annotations table.
 
-            TODO: in process
-        """
+    #         TODO: in process
+    #     """
 
-        # First we get the substances with annotations and structures and set all the molecule names to one column
-        # by adding the class name into the preferred name column where there are NaN
+    #     # First we get the substances with annotations and structures and set all the molecule names to one column
+    #     # by adding the class name into the preferred name column where there are NaN
 
-        sub_df = self.get_substances_with_endpoint_annotations_and_structure()
-        sub_df.loc[sub_df['preferred_name'].isna(),'preferred_name'] = sub_df.loc[sub_df['preferred_name'].isna(),'class_name']
-        sub_df.drop('class_name', axis=1, inplace=True)
-        sub_df.rename(columns={'preferred_name':'name'},inplace = True)
+    #     sub_df = self.get_substances_with_endpoint_annotations_and_structure()
+    #     sub_df.loc[sub_df['preferred_name'].isna(),'preferred_name'] = sub_df.loc[sub_df['preferred_name'].isna(),'class_name']
+    #     sub_df.drop('class_name', axis=1, inplace=True)
+    #     sub_df.rename(columns={'preferred_name':'name'},inplace = True)
 
-        # Second, we generate the mol object from RDKit and then remove all the substances which
-        # mol object hasn't been generated. Finally we add the Hydrogens
+    #     # Second, we generate the mol object from RDKit and then remove all the substances which
+    #     # mol object hasn't been generated. Finally we add the Hydrogens
 
-        PandasTools.AddMoleculeColumnToFrame(sub_df,'structure')
-        no_mol = sub_df[sub_df['ROMol'].isna()]
-        sub_df.drop(no_mol.index, axis=0, inplace=True)
-        sub_df['ROMol'] = [Chem.AddHs(x) for x in sub_df['ROMol'].values.tolist()]
+    #     PandasTools.AddMoleculeColumnToFrame(sub_df,'structure')
+    #     no_mol = sub_df[sub_df['ROMol'].isna()]
+    #     sub_df.drop(no_mol.index, axis=0, inplace=True)
+    #     sub_df['ROMol'] = [Chem.AddHs(x) for x in sub_df['ROMol'].values.tolist()]
 
-        cmr_df = sub_df[['name','mol_formula','structure','cmr','ROMol']]
-        pbt_df = sub_df[['name','mol_formula','structure','pbt','ROMol']]
-        vpvb_df = sub_df[['name','mol_formula','structure','vpvb','ROMol']]
-        sens_df = sub_df[['name','mol_formula','structure','sensitiser','ROMol']]
-        endoc_df = sub_df[['name','mol_formula','structure','endocrine_disruptor','ROMol']]
+    #     cmr_df = sub_df[['name','mol_formula','structure','cmr','ROMol']]
+    #     pbt_df = sub_df[['name','mol_formula','structure','pbt','ROMol']]
+    #     vpvb_df = sub_df[['name','mol_formula','structure','vpvb','ROMol']]
+    #     sens_df = sub_df[['name','mol_formula','structure','sensitiser','ROMol']]
+    #     endoc_df = sub_df[['name','mol_formula','structure','endocrine_disruptor','ROMol']]
 
-        cmr_df.loc[cmr_df['cmr'].isin(['YES','Pending']), 'activity'] = 1
-        cmr_df.loc[~cmr_df['cmr'].isin(['YES','Pending']), 'activity'] = 0
-        pbt_df.loc[pbt_df['pbt'].isin(['YES','Pending']), 'activity'] = 1
-        pbt_df.loc[~pbt_df['pbt'].isin(['YES','Pending']), 'activity'] = 0
-        vpvb_df.loc[vpvb_df['vpvb'].isin(['YES','Pending']), 'activity'] = 1
-        vpvb_df.loc[~vpvb_df['vpvb'].isin(['YES','Pending']), 'activity'] = 0
-        sens_df.loc[sens_df['sensitiser'].isin(['YES','Pending']), 'activity'] = 1
-        sens_df.loc[~sens_df['sensitiser'].isin(['YES','Pending']), 'activity'] = 0
-        endoc_df.loc[endoc_df['endocrine_disruptor'].isin(['YES','Pending']), 'activity'] = 1
-        endoc_df.loc[~endoc_df['endocrine_disruptor'].isin(['YES','Pending']), 'activity'] = 0
+    #     cmr_df.loc[cmr_df['cmr'].isin(['YES','Pending']), 'activity'] = 1
+    #     cmr_df.loc[~cmr_df['cmr'].isin(['YES','Pending']), 'activity'] = 0
+    #     pbt_df.loc[pbt_df['pbt'].isin(['YES','Pending']), 'activity'] = 1
+    #     pbt_df.loc[~pbt_df['pbt'].isin(['YES','Pending']), 'activity'] = 0
+    #     vpvb_df.loc[vpvb_df['vpvb'].isin(['YES','Pending']), 'activity'] = 1
+    #     vpvb_df.loc[~vpvb_df['vpvb'].isin(['YES','Pending']), 'activity'] = 0
+    #     sens_df.loc[sens_df['sensitiser'].isin(['YES','Pending']), 'activity'] = 1
+    #     sens_df.loc[~sens_df['sensitiser'].isin(['YES','Pending']), 'activity'] = 0
+    #     endoc_df.loc[endoc_df['endocrine_disruptor'].isin(['YES','Pending']), 'activity'] = 1
+    #     endoc_df.loc[~endoc_df['endocrine_disruptor'].isin(['YES','Pending']), 'activity'] = 0
 
-        cmr_pos = cmr_df[cmr_df['cmr'].isin(['YES','Pending'])]
-        cmr_neg = cmr_df[~cmr_df['cmr'].isin(['YES','Pending'])]
-        pbt_pos = pbt_df[pbt_df['pbt'].isin(['YES','Pending'])]
-        pbt_neg = pbt_df[~pbt_df['pbt'].isin(['YES','Pending'])]
-        vpvb_pos = vpvb_df[vpvb_df['vpvb'].isin(['YES','Pending'])]
-        vpvb_neg = vpvb_df[~vpvb_df['vpvb'].isin(['YES','Pending'])]
-        sens_pos = sens_df[sens_df['sensitiser'].isin(['YES','Pending'])]
-        sens_neg = sens_df[~sens_df['sensitiser'].isin(['YES','Pending'])]
-        endoc_pos = endoc_df[endoc_df['endocrine_disruptor'].isin(['YES','Pending'])]
-        endoc_neg = endoc_df[~endoc_df['endocrine_disruptor'].isin(['YES','Pending'])]
+    #     cmr_pos = cmr_df[cmr_df['cmr'].isin(['YES','Pending'])]
+    #     cmr_neg = cmr_df[~cmr_df['cmr'].isin(['YES','Pending'])]
+    #     pbt_pos = pbt_df[pbt_df['pbt'].isin(['YES','Pending'])]
+    #     pbt_neg = pbt_df[~pbt_df['pbt'].isin(['YES','Pending'])]
+    #     vpvb_pos = vpvb_df[vpvb_df['vpvb'].isin(['YES','Pending'])]
+    #     vpvb_neg = vpvb_df[~vpvb_df['vpvb'].isin(['YES','Pending'])]
+    #     sens_pos = sens_df[sens_df['sensitiser'].isin(['YES','Pending'])]
+    #     sens_neg = sens_df[~sens_df['sensitiser'].isin(['YES','Pending'])]
+    #     endoc_pos = endoc_df[endoc_df['endocrine_disruptor'].isin(['YES','Pending'])]
+    #     endoc_neg = endoc_df[~endoc_df['endocrine_disruptor'].isin(['YES','Pending'])]
