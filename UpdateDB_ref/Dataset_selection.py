@@ -86,6 +86,41 @@ class Selection(object):
     
     ### Imbalance correction
 
+    def random_oversampler_subsampler_single_dataframe(self, df: pd.DataFrame, algorithm: str) -> pd.DataFrame:
+        """
+            This function applies either Random Subsampling or Random Oversampling.
+            Only for one dataframe used as training or test set.
+
+            Random Undersampling
+            https://imbalanced-learn.readthedocs.io/en/stable/under_sampling.html
+
+            Random Oversampling
+            https://imbalanced-learn.readthedocs.io/en/stable/over_sampling.html
+
+            :param train_:
+            :param test_:
+            :param algorithm: this can either be 'oversampling' or 'subsampling'
+
+            :return resampled_train_set:
+        """
+
+        if algorithm == 'oversampling':
+            sampler = RandomOverSampler(random_state=0)
+        elif algorithm == 'subsampling':
+            sampler = RandomUnderSampler(random_state=0)
+        
+        y_train = df['activity']
+        x_train = df.drop(columns='activity')
+        
+        regular_cols = x_train.columns
+        
+        x_train_resampled, y_train_resampled = sampler.fit_resample(x_train, y_train)
+        
+        resampled_train_set = pd.DataFrame(data=x_train_resampled, columns=regular_cols)
+        resampled_train_set.loc[:,'activity'] = y_train_resampled
+        
+        return resampled_train_set
+
     def random_oversampler_subsampler(self, train_: pd.DataFrame, test_: pd.DataFrame, algorithm: str) -> pd.DataFrame:
         """
             This function applies either Random Subsampling or Random Oversampling.
@@ -136,13 +171,52 @@ class Selection(object):
 
             :param df:
 
-            :return doubled_df:
+            :return positive_doubled_df:
         """
 
         pos_cond = df[df['activity'] == 1]
-        doubled_df = pd.concat([df,pos_cond], ignore_index=True, axis=0)
+        positive_doubled_df = pd.concat([df,pos_cond], ignore_index=True, axis=0)
         
-        return doubled_df
+        return positive_doubled_df
+
+    #### Double negative condition
+
+    def double_negative_condition(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+            This functions doubles the rows of the negative condition compounds.
+            Simple way of oversampling.
+
+            :param df:
+
+            :return doubled_df:
+        """
+
+        neg_cond = df[df['activity'] == 0]
+        negative_doubled_df = pd.concat([df,neg_cond], ignore_index=True, axis=0)
+        
+        return negative_doubled_df
+
+    #### Triple condition
+
+    def triple_condition(self, df: pd.DataFrame, condition: str) -> pd.DataFrame:
+        """
+            This function triplicates the selected contidion (positive or negative).
+            Simple way of oversampling.
+
+            :param df:
+            :param condtion: a string that can either be 'positive' or 'negative'
+
+            :return triple_cond_df
+        """
+
+        if condition == 'positive':
+            cond_df = df[df['activity'] == 1]
+        elif condition == 'negative':
+            cond_df = df[df['activity'] == 0]
+
+        triple_cond_df = pd.concat([df, cond_df, cond_df], ignore_index=True, axis=0)
+
+        return triple_cond_df
 
     #### SMOTEEN part
 

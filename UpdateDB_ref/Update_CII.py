@@ -243,9 +243,9 @@ class UpdateDB(Connector):
 
             if isinstance(annotation, list):
                 for ann in annotation:
-                    annotationID = self.add_annotation(ann)
+                    self.add_annotation(ann)
             elif isinstance(annotation, str):
-                annotationID = self.add_annotation(annotation)
+                self.add_annotation(annotation)
 
     #### Input string processing
 
