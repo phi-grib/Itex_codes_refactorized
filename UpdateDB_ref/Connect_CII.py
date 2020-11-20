@@ -146,7 +146,24 @@ class Connector():
                                                 order by id ASC""", self.conn)
         
         return endpoint_annotation
+    
+    def get_endpoints_with_chemical_id(self) -> pd.DataFrame:
+        """
+            Get all the substances with endpoint annotations and the chemical id
+            corresponding to each.
+
+            :return endpoint_chem_id_annotation:
+        """
+
+        endpoint_chem_id_annotation = pd.read_sql_query("""SELECT s.class_name_curated, s.preferred_name_curated, ci."name",
+                                                        ea.cmr, ea.pbt, ea.vpvb, ea.endocrine_disruptor
+                                                        FROM endpoint_annotation ea
+                                                        left join chem_id ci on ci.id = ea.chem_id 
+                                                        left join substance s on s.chem_id = ea.chem_id
+                                                        order by s.chem_id ASC """, self.conn)
         
+        return endpoint_chem_id_annotation
+
     def get_substances_with_endpoint_annotations_and_structure(self) -> pd.DataFrame:
         """
             Get substances with SMILES and endpoint annotations. The aim is to generate an sdf from 
