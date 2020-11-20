@@ -328,21 +328,23 @@ class Connector():
             :return regulations_per_substance:
         """
         #updated
-        regulations_per_substance = pd.read_sql_query("""SELECT reg.id, cid.subs_id, sub.class_name, sub.preferred_name, rco.country, rt."type", rg.general_regulation_name, rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
-                                                            rsc.special_cases_name, addr.additional_information_name, cid."name" as chemical_identifier, ct."type" as type_of_identifier, regn.names
-                                                            FROM regulations reg
-                                                            LEFT JOIN chem_id cid ON cid.id = reg.chem_id
-                                                            LEFT JOIN substance sub ON sub.chem_id = cid.id
-                                                            left join regulation_country rco on rco.id = reg.reg_country_id
-                                                            left join regulation_type rt on rt.id = reg.reg_type_id
-                                                            left join general_regulation rg on rg.id = reg.gen_reg_id
-                                                            left join specific_regulation rspec on rspec.id = reg.spec_reg_id
-                                                            LEFT JOIN subspecific_regulation rsub ON rsub.id = reg.subspec_reg_id
-                                                            left join special_cases_regulation rsc on rsc.id = reg.special_cases_id
-                                                            left join additional_information_regulation addr on addr.id = reg.additional_information_id
-                                                            LEFT JOIN chem_type ct ON ct.id = cid.chem_type_id
-                                                            LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id
-                                                            order by reg.id asc;""",self.conn)
+        regulations_per_substance = pd.read_sql_query("""SELECT reg.id, cid."name" as chemical_identifier, sub.class_name_curated , 
+                                                        sub.preferred_name_curated , rco.country, rt."type", rg.general_regulation_name, 
+                                                        rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
+                                                        rsc.special_cases_name, addr.additional_information_name, regn.names
+                                                        FROM regulations reg
+                                                        LEFT JOIN chem_id cid ON cid.id = reg.chem_id
+                                                        LEFT JOIN substance sub ON sub.chem_id = cid.id
+                                                        left join regulation_country rco on rco.id = reg.reg_country_id
+                                                        left join regulation_type rt on rt.id = reg.reg_type_id
+                                                        left join general_regulation rg on rg.id = reg.gen_reg_id
+                                                        left join specific_regulation rspec on rspec.id = reg.spec_reg_id
+                                                        LEFT JOIN subspecific_regulation rsub ON rsub.id = reg.subspec_reg_id
+                                                        left join special_cases_regulation rsc on rsc.id = reg.special_cases_id
+                                                        left join additional_information_regulation addr on addr.id = reg.additional_information_id
+                                                        LEFT JOIN chem_type ct ON ct.id = cid.chem_type_id
+                                                        LEFT JOIN regulation_names regn ON regn.id = reg.regulation_id
+                                                        order by reg.chem_id asc;""",self.conn)
 
         return regulations_per_substance
     
