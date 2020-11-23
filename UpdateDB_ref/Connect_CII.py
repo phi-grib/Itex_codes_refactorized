@@ -172,15 +172,14 @@ class Connector():
             :return sub_ann_struc:
         """
         #updated
-        sub_ann_struc = pd.read_sql_query("""SELECT class_name, preferred_name, mol_formula, 
-                                                str."structure", ep.cmr, ep.pbt, ep.vpvb, 
-                                                ep.sensitiser, ep.endocrine_disruptor
+        sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", 
+                                                str.structure_curated, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
                                                 left join substance_structure str on str.chem_id = cid.id
                                                 left join endpoint_annotation ep on ep.chem_id = cid.id
-                                                where str."structure" is not null  
-                                                order by sub.id asc;""", self.conn)
+                                                where str.structure_curated is not null  
+                                                order by sub.chem_id asc;""", self.conn)
         
         return sub_ann_struc
 
