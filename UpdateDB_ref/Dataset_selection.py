@@ -55,7 +55,7 @@ class Selection(object):
                 train_set, test_set = self.random_oversampler_subsampler(train_set,test_set, 'oversampling')
             elif self.imbalance_algorithm.lower() == 'subsampling':
                 train_set, test_set = self.random_oversampler_subsampler(train_set, test_set, 'subsampling')
-            elif self.imbalance_algorithm.lower == 'smoteen':
+            elif self.imbalance_algorithm.lower() == 'smoteen':
                 train_set, test_set = self.smoteen_resample_sets(train_set, test_set)
 
         return train_set, test_set
