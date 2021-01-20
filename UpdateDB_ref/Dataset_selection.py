@@ -23,7 +23,7 @@ class Selection(object):
         It also includes the imbalance correction, which is applied if the user needs to.
     """
 
-    def __init__(self, dataframe: pd.DataFrame, train_prop: float, test_prop: float, imbalance_algorithm: str = None):
+    def __init__(self, dataframe: pd.DataFrame, train_prop: float, test_prop: float):
         """
             Initializes class
 
@@ -36,11 +36,10 @@ class Selection(object):
         self.main_data = dataframe
         self.train_prop = train_prop
         self.test_prop = test_prop
-        self.imbalance_algorithm = imbalance_algorithm
     
     ### Selection main function
 
-    def split_main_dataset(self) -> pd.DataFrame:
+    def split_main_dataset(self, imbalance_algorithm: str = None) -> pd.DataFrame:
         """
             This is the main function that returns the training set and the test set
             after applying the different proportions and the imbalance correction to the main set
@@ -50,13 +49,13 @@ class Selection(object):
 
         train_set, test_set = self.get_sets(self.main_data, self.train_prop, self.test_prop)
 
-        if self.imbalance_algorithm:
-            if self.imbalance_algorithm.lower() == 'oversampling':
-                train_set, test_set = self.random_oversampler_subsampler(train_set,test_set, 'oversampling')
-            elif self.imbalance_algorithm.lower() == 'subsampling':
-                train_set, test_set = self.random_oversampler_subsampler(train_set, test_set, 'subsampling')
-            elif self.imbalance_algorithm.lower() == 'smoteen':
-                train_set, test_set = self.smoteen_resample_sets(train_set, test_set)
+        
+        if imbalance_algorithm.lower() == 'oversampling':
+            train_set, test_set = self.random_oversampler_subsampler(train_set,test_set, 'oversampling')
+        elif imbalance_algorithm.lower() == 'subsampling':
+            train_set, test_set = self.random_oversampler_subsampler(train_set, test_set, 'subsampling')
+        elif imbalance_algorithm.lower() == 'smoteen':
+            train_set, test_set = self.smoteen_resample_sets(train_set, test_set)
 
         return train_set, test_set
 
