@@ -49,13 +49,13 @@ class Selection(object):
 
         train_set, test_set = self.get_sets(self.main_data, self.train_prop, self.test_prop)
 
-        
-        if imbalance_algorithm.lower() == 'oversampling':
-            train_set, test_set = self.random_oversampler_subsampler(train_set,test_set, 'oversampling')
-        elif imbalance_algorithm.lower() == 'subsampling':
-            train_set, test_set = self.random_oversampler_subsampler(train_set, test_set, 'subsampling')
-        elif imbalance_algorithm.lower() == 'smoteen':
-            train_set, test_set = self.smoteen_resample_sets(train_set, test_set)
+        if imbalance_algorithm:
+            if imbalance_algorithm.lower() == 'oversampling':
+                train_set, test_set = self.random_oversampler_subsampler(train_set,test_set, 'oversampling')
+            elif imbalance_algorithm.lower() == 'subsampling':
+                train_set, test_set = self.random_oversampler_subsampler(train_set, test_set, 'subsampling')
+            elif imbalance_algorithm.lower() == 'smoteen':
+                train_set, test_set = self.smoteen_resample_sets(train_set, test_set)
 
         return train_set, test_set
 
