@@ -172,7 +172,7 @@ class Connector():
             :return sub_ann_struc:
         """
         #updated
-        sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", 
+        sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
                                                 str.structure_curated, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
