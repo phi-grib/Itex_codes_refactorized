@@ -156,7 +156,8 @@ class Connector():
         """
 
         endpoint_chem_id_annotation = pd.read_sql_query("""SELECT s.class_name_curated, s.preferred_name_curated, ci."name",
-                                                        ea.cmr, ea.pbt, ea.vpvb, ea.endocrine_disruptor
+                                                        ea.cmr, ea.pbt, ea.vpvb, ea.endocrine_disruptor, ea.c, ea.m, ea.r,
+                                                        ea.p, ea.b, ea.t, ea.vp, ea.vb
                                                         FROM endpoint_annotation ea
                                                         left join chem_id ci on ci.id = ea.chem_id 
                                                         left join substance s on s.chem_id = ea.chem_id
@@ -173,7 +174,8 @@ class Connector():
         """
         #updated
         sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
-                                                str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor
+                                                str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
+                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
                                                 left join substance_structure str on str.chem_id = cid.id

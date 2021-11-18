@@ -303,14 +303,23 @@ class Endpoint(UpdateDB):
 
         for i, row in chemid_endpoint_annotations.iterrows():
             chem_id = int(row['chem_id'])
-            cmr = row['CMR']
-            pbt = row['PBT']
-            vpvb = row['vPvB']
-            endoc = row['Endocrine Disruptor']
+            cmr = row['cmr']
+            pbt = row['pbt']
+            vpvb = row['vpvb']
+            endoc = row['endocrine disruptor']
+            c = row['c']
+            m = row ['m']
+            r = row['r']
+            p = row['p']
+            b = row['b']
+            t = row['t']
+            vp = row['vp']
+            vb = row['vb']
             
-            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc)
+            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb)
     
-    def add_annotation(self, chem_id: int, cmr: str, pbt: str, vpvb: str, endoc: str):
+    def add_annotation(self, chem_id: int, cmr: str, pbt: str, vpvb: str, endoc: str,
+                        c: str, m: str, r: str, p: str, b: str, t: str, vp: str, vb: str):
         """
             Adds new annotation into database.
             Checks if there is already one and updates it if necessary
@@ -330,15 +339,31 @@ class Endpoint(UpdateDB):
             pbt_db = ep_list[3]
             vpvb_db = ep_list[4]
             endoc_db = ep_list[5]
+            c_db = ep_list[6]
+            m_db = ep_list[7]
+            r_db = ep_list[8]
+            p_db = ep_list[9]
+            b_db = ep_list[10]
+            t_db = ep_list[11]
+            vp_db = ep_list[12]
+            vb_db = ep_list[13]
             self.update_annotations('cmr',cmr_db,cmr,chem_id)
             self.update_annotations('pbt',pbt_db,pbt,chem_id)
             self.update_annotations('vpvb',vpvb_db,vpvb,chem_id)
             self.update_annotations('endocrine_disruptor',endoc_db,endoc,chem_id)
+            self.update_annotations('c',c_db,c,chem_id)
+            self.update_annotations('m',m_db,m,chem_id)
+            self.update_annotations('r',r_db,r,chem_id)
+            self.update_annotations('p',p_db,p,chem_id)
+            self.update_annotations('b',b_db,b,chem_id)
+            self.update_annotations('t',t_db,t,chem_id)
+            self.update_annotations('vp',vp_db,vp,chem_id)
+            self.update_annotations('vb',vb_db,vb,chem_id)
         else:
             max_id_cmd = """SELECT max(id) from endpoint_annotation"""
-            insert_query = """INSERT INTO public.endpoint_annotation (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor)
-                             VALUES ({},{},'{}','{}','{}','{}')"""
-            self.insert_in_database(max_id_cmd, insert_query,chem_id,cmr,pbt,vpvb,endoc)
+            insert_query = """INSERT INTO public.endpoint_annotation (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor, c,m,r,p,b,t,vp,vb)
+                             VALUES ({},{},'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"""
+            self.insert_in_database(max_id_cmd, insert_query,chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb)
 
     def update_annotations(self, endpoint: str, old_endpoint_annotation: str, new_endpoint_annotation: str, chem_id: int):
         """
