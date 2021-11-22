@@ -671,7 +671,11 @@ class UpdateDB(Connector):
         """
         
         self.curs.execute(max_db_cmd)
-        ID_number = self.curs.fetchone()[0] + 1
+        previous_id = self.curs.fetchone()[0]
+        if previous_id is None:
+            ID_number = 0
+        else:
+            ID_number = previous_id + 1
         self.conn.commit()
         
         self.curs.execute(insert_cmd.format(ID_number, *args))
