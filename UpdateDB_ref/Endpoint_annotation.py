@@ -315,11 +315,13 @@ class Endpoint(UpdateDB):
             t = row['t']
             vp = row['vp']
             vb = row['vb']
-            
-            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb, table_name)
+            ar = row['androgen_rc']
+            er = row['estrogen_rc']
+            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er, table_name)
     
     def add_annotation(self, chem_id: int, cmr: str, pbt: str, vpvb: str, endoc: str,
-                        c: str, m: str, r: str, p: str, b: str, t: str, vp: str, vb: str, table_name: str):
+                        c: str, m: str, r: str, p: str, b: str, t: str, vp: str, vb: str, 
+                        ar: str, er: str, table_name: str):
         """
             Adds new annotation into database.
             Checks if there is already one and updates it if necessary
@@ -330,23 +332,26 @@ class Endpoint(UpdateDB):
             :parab vpvb:
             :param endoc:
         """
-
+        
         ep_cmd = "SELECT * FROM {} WHERE chem_id = '{}';".format(table_name, chem_id)
         ep_list = self.check_presence_or_absence_endpoint(ep_cmd)
         
         if ep_list:
-            cmr_db = ep_list[2]
-            pbt_db = ep_list[3]
-            vpvb_db = ep_list[4]
-            endoc_db = ep_list[5]
-            c_db = ep_list[6]
-            m_db = ep_list[7]
-            r_db = ep_list[8]
-            p_db = ep_list[9]
-            b_db = ep_list[10]
-            t_db = ep_list[11]
-            vp_db = ep_list[12]
-            vb_db = ep_list[13]
+            cmr_db = ep_list[1]
+            pbt_db = ep_list[2]
+            vpvb_db = ep_list[3]
+            endoc_db = ep_list[4]
+            c_db = ep_list[7]
+            m_db = ep_list[8]
+            r_db = ep_list[9]
+            p_db = ep_list[10]
+            b_db = ep_list[11]
+            t_db = ep_list[12]
+            vp_db = ep_list[13]
+            vb_db = ep_list[14]
+            ar_db = ep_list[15]
+            er_db = ep_list[16]
+            
             self.update_annotations('cmr',cmr_db,cmr,chem_id,table_name)
             self.update_annotations('pbt',pbt_db,pbt,chem_id,table_name)
             self.update_annotations('vpvb',vpvb_db,vpvb,chem_id,table_name)
@@ -359,12 +364,14 @@ class Endpoint(UpdateDB):
             self.update_annotations('t',t_db,t,chem_id,table_name)
             self.update_annotations('vp',vp_db,vp,chem_id,table_name)
             self.update_annotations('vb',vb_db,vb,chem_id,table_name)
+            self.update_annotations('androgen_rc',ar_db,ar,chem_id,table_name)
+            self.update_annotations('estrogen_rc',er_db,er,chem_id,table_name)
         else:
             max_id_cmd = """SELECT max(id) from {}""".format(table_name)
-            insert_query = """INSERT INTO """+table_name+""" (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor, c,m,r,p,b,t,vp,vb)
-                             VALUES ({},{},'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"""
+            insert_query = """INSERT INTO """+table_name+""" (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor, c,m,r,p,b,t,vp,vb,androgen_rc,estrogen_rc)
+                             VALUES ({},{},'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"""
             
-            self.insert_in_database(max_id_cmd,insert_query,chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb)
+            self.insert_in_database(max_id_cmd,insert_query,chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er)
 
     def update_annotations(self, endpoint: str, old_endpoint_annotation: str, new_endpoint_annotation: str, chem_id: int, table_name: str):
         """
@@ -376,10 +383,13 @@ class Endpoint(UpdateDB):
             :param chem_id: substance id of the compound in the database
         """
 
-        if old_endpoint_annotation == 'YES' or old_endpoint_annotation == new_endpoint_annotation:
+        if (old_endpoint_annotation == 'YES') or \
+            (old_endpoint_annotation == new_endpoint_annotation) or \
+            (old_endpoint_annotation != 'No information' and new_endpoint_annotation == 'No information'):
             pass
         else:
             update_query = """UPDATE {} SET {} = '{}' WHERE chem_id = '{}';""".format(table_name, endpoint, new_endpoint_annotation,chem_id)
+            
             self.curs.execute(update_query)
             self.conn.commit()
 
