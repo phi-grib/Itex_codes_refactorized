@@ -83,7 +83,6 @@ class Connector():
             :return substances_df
         """
 
-        # Updated
         substances_df = pd.read_sql_query("""SELECT id, chem_id, class_name, preferred_name, mol_formula FROM public.substance;""",self.conn)
 
         return substances_df
@@ -95,7 +94,6 @@ class Connector():
             :return curated_substances_df:
         """
 
-        # Updated
         curated_substances_df = pd.read_sql_query("""SELECT id, chem_id, class_name_curated, preferred_name_curated, mol_formula_curated FROM public.substance;""",self.conn)
 
         return curated_substances_df
@@ -106,7 +104,6 @@ class Connector():
 
             :return substances_chem_id:
         """
-        # Updated
         
         substances_chem_id = pd.read_sql_query("""SELECT sub.id as substance_id, sub.chem_id as chemical_id, sub.class_name_curated, sub.preferred_name_curated, 
                                                 sub.mol_formula_curated, cid."name" as Chemical_identifier, ct."type" as Type_of_identifier
@@ -122,8 +119,6 @@ class Connector():
 
             :return substance_structures:
         """
-
-        # Updated
 
         substance_structures = pd.read_sql_query("""SELECT s.class_name_curated, s.preferred_name_curated, cid."name" , struc.chem_id, struc."structure",
                                                 struc.structure_curated, struc.substance_type_id
@@ -172,10 +167,10 @@ class Connector():
 
             :return sub_ann_struc:
         """
-        #updated
+        
         sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
                                                 str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
-                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb
+                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
                                                 left join substance_structure str on str.chem_id = cid.id
@@ -186,6 +181,35 @@ class Connector():
         
         return sub_ann_struc
 
+    def get_substances_with_experimental_endpoint_annotation_and_structure(self) -> pd.DataFrame:
+        """
+            Returns a dataframe with the experimental endpoint annotations and the SMILES of each compound.
+
+            :return exp_endpoint_ann:
+        """
+
+        exp_endpoint_ann = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
+                                                str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
+                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc
+                                                FROM experimental_endpoint_annotation ep
+                                                left join substance sub on sub.chem_id = ep.chem_id 
+                                                left join chem_id cid on ep.chem_id = cid.id 
+                                                left join substance_structure str on str.chem_id = cid.id
+                                                left join substance_type st on st.id = str.substance_type_id
+                                                where str.structure_curated is not null  
+                                                order by ep.chem_id asc;""", self.conn)
+
+        return exp_endpoint_ann
+
+    def get_substances_with_predicted_endpoint_annotations_and_structure(self) -> pd.DataFrame:
+        """
+            Returns a dataframe with the predicted endpoint annotations and the SMILES of each compound
+
+            :return predicted_endpoint_ann:
+        """
+
+        pass
+    
     #### Chemical Identifier block (CAS/EC/Index)
     #### Functions that interact with chem id tables and extract them as dataframes
 
@@ -316,7 +340,7 @@ class Connector():
 
             :return big_regulations_table:
         """
-        #updated
+        
         big_regulations_table = pd.read_sql_query("""SELECT id, chem_id, reg_country_id, reg_type_id, gen_reg_id, 
                                                     spec_reg_id, subspec_reg_id, special_cases_id, additional_information_id, 
                                                     chem_id_name, chem_type_id, regulation_id FROM public.regulations;""",self.conn)
@@ -329,7 +353,7 @@ class Connector():
 
             :return regulations_per_substance:
         """
-        #updated
+        
         regulations_per_substance = pd.read_sql_query("""SELECT reg.id, cid."name" as chemical_identifier, sub.class_name_curated , 
                                                         sub.preferred_name_curated , rco.country, rt."type", rg.general_regulation_name, 
                                                         rspec.specific_regulation_name, rsub.subspecific_regulation_name, 
