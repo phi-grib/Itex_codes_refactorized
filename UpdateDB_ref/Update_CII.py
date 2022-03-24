@@ -102,11 +102,11 @@ class UpdateDB(Connector):
                 for ann in annotation:
                     annotationID = self.add_annotation(ann)
                     # Big regulations table updating
-                    big_reg_id = self.add_regulations_and_annotaitons(substance_id, sourceID, annotationID)
+                    big_reg_id = self.add_regulations_and_annotaitons(chem_id, sourceID, annotationID)
             elif isinstance(annotation, str):
                 annotationID = self.add_annotation(annotation)
                 # Big regulations table updating
-                big_reg_id = self.add_regulations_and_annotaitons(substance_id, sourceID, annotationID)
+                big_reg_id = self.add_regulations_and_annotaitons(chem_id, sourceID, annotationID)
     
     def add_substances_from_dataframe(self, dataframe: pd.DataFrame, preferred_name_field: str, class_name_field: Optional[str] = None):
         """
@@ -346,7 +346,7 @@ class UpdateDB(Connector):
             :return substanceID:
         """
 
-        cmd = "SELECT id FROM substance WHERE preferred_name = '{}';".format(preferred_name)
+        cmd = "SELECT id FROM substance WHERE preferred_name = '{}';".format(preferred_name.replace("'",""))
         substanceID = self.check_presence_or_absence(cmd)
     
         if not substanceID:
@@ -502,11 +502,11 @@ class UpdateDB(Connector):
 
     #### Big table with regulations and annotations
 
-    def add_regulations_and_annotaitons(self, subs_id: int, source_id: list, ann_id: int) -> int:
+    def add_regulations_and_annotaitons(self, chem_id: int, source_id: list, ann_id: int) -> int:
         """
             Adds annotation with regulations in big table if it's not present
 
-            :param subs_id:
+            :param chem_id:
             :param source_id:
             :param ann_id:
 
@@ -518,7 +518,7 @@ class UpdateDB(Connector):
         
         sources_dict_query = self.create_sources_dict(source_id)
        
-        new_cmd = """SELECT id FROM public.regulations where subs_id = {} {} and regulation_id = {}""".format(subs_id,
+        new_cmd = """SELECT id FROM public.regulations where chem_id = {} {} and regulation_id = {}""".format(chem_id,
                                                                                             ' '.join(sources_dict_query['check_query']), ann_id)
         reg_id = self.check_presence_or_absence(new_cmd)
 
@@ -526,12 +526,12 @@ class UpdateDB(Connector):
             max_id_cmd = """SELECT max(id) FROM regulations;"""
             #### values_to_add: I made it like this to overcome an error of tuple index out of range in insert_in_database function, since
             #### sources_dict_query['id'] is a list and when it had more than one element, the function wasn't capturing it well
-            values_to_add = [subs_id, 1]
+            values_to_add = [chem_id, 1]
             values_to_add.extend(sources_dict_query['id'])
             values_to_add.append(ann_id)
 
             values_str = ''.join(["VALUES ({},",','.join(["{}".format(str(element)) for element in values_to_add]),");"])
-            insert_cmd = """INSERT INTO public.regulations (id, subs_id, reg_country_id, 
+            insert_cmd = """INSERT INTO public.regulations (id, chem_id, reg_country_id, 
                         {} regulation_id) {}""".format(' '.join(sources_dict_query['insert_query']),values_str)
            
             reg_id = self.insert_in_database(max_id_cmd, insert_cmd, values_to_add)
@@ -600,11 +600,13 @@ class UpdateDB(Connector):
             :return id_:
         """
 
-        self.curs.execute(query)
+        
         try:
+            self.curs.execute(query)
             id_ = self.curs.fetchone()[0]
             self.conn.commit()
-        except TypeError:
+        except:
+            self.conn.rollback()
             id_ = None
         
         return id_   
@@ -669,15 +671,17 @@ class UpdateDB(Connector):
 
             :return new_id: new id generated from the query
         """
-        
-        self.curs.execute(max_db_cmd)
-        ID_number = self.curs.fetchone()[0] + 1
-        self.conn.commit()
-        
-        self.curs.execute(insert_cmd.format(ID_number, *args))
-        self.conn.commit()
-        
-        return ID_number
+        try:
+            self.curs.execute(max_db_cmd)
+            ID_number = self.curs.fetchone()[0] + 1
+            self.conn.commit()
+
+            self.curs.execute(insert_cmd.format(ID_number, *args))
+            self.conn.commit()
+
+            return ID_number
+        except:
+            return 
     
     #### Delete data from the database
 
