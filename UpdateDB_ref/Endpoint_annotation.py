@@ -77,7 +77,7 @@ class Endpoint(UpdateDB):
         """
 
         chemid_annotations = self.check_presence_in_table(chem_id, annotations)
-       
+        
         if chemid_annotations.empty:
             final_annotation = source = hazard = 'No information'
         else:
@@ -211,7 +211,7 @@ class Endpoint(UpdateDB):
         # We use this lists to check the presence of annotations in these regulations,
         # which are the ones that are used in the USC Workflow. 
         
-        gen_regs = ['clp', 'pbt_vpvb', 'endocrine_disruptors']
+        gen_regs = ['clp', 'pbt_vpvb', 'endocrine_disruptors','GHS']
         spec_regs = ['svhc', 'harmonised_C&L','annex_vi']
         subspec_regs = ['candidate_list','hazard_class']
 

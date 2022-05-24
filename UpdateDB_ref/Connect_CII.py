@@ -97,7 +97,24 @@ class Connector():
         curated_substances_df = pd.read_sql_query("""SELECT id, chem_id, class_name_curated, preferred_name_curated, mol_formula_curated FROM public.substance;""",self.conn)
 
         return curated_substances_df
-        
+    
+    def get_substances_with_cas_number(self) -> pd.DataFrame:
+        """
+            Get substances with CAS numbers
+
+            :return substances_cas:
+        """
+
+        substances_cas = pd.read_sql_query("""SELECT sub.id as substance_id, sub.chem_id as chemical_id, sub.class_name_curated, 
+                                            sub.preferred_name_curated, sub.mol_formula_curated, cid."name" as Chemical_identifier, 
+                                            ct."type" as Type_of_identifier
+                                            FROM substance sub
+                                            left join chem_id cid on cid.id = sub.chem_id
+                                            left join chem_type ct on ct.id = cid.chem_type_id
+                                            where cid.chem_type_id = 1""", self.conn)
+
+        return substances_cas
+
     def get_substances_with_chemical_identifiers(self) -> pd.DataFrame:
         """
             Get substances with chemical identifiers (CAS, EC, Index) from database
