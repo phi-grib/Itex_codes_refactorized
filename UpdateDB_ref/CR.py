@@ -63,15 +63,21 @@ class CR(Connector):
             :returns annotation_dataframe:
         """
 
-        annotation_dataframe = pd.read_sql_query("""SELECT synonym.name as reg_number, source.name as source_name, 
-                                                subs_ann.original_annotation, annotation.annotation, annotation.general, annotation.category
+        annotation_dataframe = pd.read_sql_query("""SELECT synonym.name as CAS, source.name as source_name, 
+                                                subs_ann.original_annotation, subs_ann."type", annotation.annotation, annotation.general, 
+                                                annotation.category
                                                 FROM substance sub
                                                 left join synonym on synonym.subsid = sub.id
                                                 left join source on source.id = sub.sourceid
                                                 left join subs_ann on subs_ann.subsid = sub.id
                                                 left join annotation on annotation.id = subs_ann.annid
                                                 where synonym.type like '%CAS%'
-                                                order by synonym.name ASC""", self.compounddb_conn)
+                                                and subs_ann.type in ('Negative', 'Positive', 'Suspected', 'Confirmed','No information')
+                                                and synonym.name not in ('-','_','---','—','Multiple CAS No. Possible','NOCAS_CMS-88808')
+                                                and synonym.name not like ('%/%')
+                                                and annotation.category in ('CMR', 'PBT','vPvB','Endocrine Disruptor')
+                                                and source.name != 'Inditex'
+                                                order by synonym.name asc""", self.compounddb_conn)
         
         annotation_dataframe = self.clean_annotations_dataframe(annotation_dataframe)
         
@@ -87,11 +93,11 @@ class CR(Connector):
         """
 
         ann_df.drop_duplicates(inplace=True)
-        ann_df.rename(columns={'reg_number':'CAS'},inplace=True)
-        ann_df.drop(labels=ann_df[ann_df['CAS'].isin(['-','_','---','—','Multiple CAS No. Possible','NOCAS_CMS-88808'])].index, axis=0, inplace=True)
-        ann_df.drop(labels=ann_df[ann_df['CAS'].str.contains('/')].index,axis=0, inplace=True)
+        ann_df.rename(columns={'cas':'CAS'},inplace=True)
+        # ann_df.drop(labels=ann_df[ann_df['CAS'].isin(['-','_','---','—','Multiple CAS No. Possible','NOCAS_CMS-88808'])].index, axis=0, inplace=True)
+        # ann_df.drop(labels=ann_df[ann_df['CAS'].str.contains('/')].index,axis=0, inplace=True)
         ann_df.drop(labels=ann_df[ann_df['CAS'].str.contains('nan')].index,axis=0, inplace=True)
         ann_df.loc[ann_df['CAS'].str.contains('-,'), 'CAS'] = ann_df[ann_df['CAS'].str.contains('-,')].CAS.apply(lambda x: str(x).replace('-,  ',''))
-        ann_df.sort_values(by=['CAS','source_name','original_annotation','annotation'], inplace=True)
+        ann_df.sort_values(by=['CAS','source_name','original_annotation','type','annotation'], inplace=True)
 
         return ann_df

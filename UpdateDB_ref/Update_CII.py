@@ -503,6 +503,7 @@ class UpdateDB(Connector):
     #### Big table with regulations and annotations
 
     def add_regulations_and_annotaitons(self, chem_id: int, source_id: list, ann_id: int) -> int:
+
         """
             Adds annotation with regulations in big table if it's not present
 
@@ -526,11 +527,13 @@ class UpdateDB(Connector):
             max_id_cmd = """SELECT max(id) FROM regulations;"""
             #### values_to_add: I made it like this to overcome an error of tuple index out of range in insert_in_database function, since
             #### sources_dict_query['id'] is a list and when it had more than one element, the function wasn't capturing it well
+
             values_to_add = [chem_id, 1]
             values_to_add.extend(sources_dict_query['id'])
-            values_to_add.append(ann_id)
-
+            values_to_add.extend([ann_id, chem_id])
+            
             values_str = ''.join(["VALUES ({},",','.join(["{}".format(str(element)) for element in values_to_add]),");"])
+
             insert_cmd = """INSERT INTO public.regulations (id, chem_id, reg_country_id, 
                         {} regulation_id) {}""".format(' '.join(sources_dict_query['insert_query']),values_str)
            
@@ -671,9 +674,14 @@ class UpdateDB(Connector):
 
             :return new_id: new id generated from the query
         """
+
         try:
             self.curs.execute(max_db_cmd)
-            ID_number = self.curs.fetchone()[0] + 1
+            previous_id = self.curs.fetchone()[0]
+            if previous_id is None:
+                ID_number = 0
+            else:
+                ID_number = previous_id + 1
             self.conn.commit()
 
             self.curs.execute(insert_cmd.format(ID_number, *args))
