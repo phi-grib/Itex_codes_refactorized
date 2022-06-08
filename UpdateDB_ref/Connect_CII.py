@@ -185,7 +185,7 @@ class Connector():
             :return sub_ann_struc:
         """
         
-        sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
+        sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid.id as chem_id, cid."name", sub.mol_formula_curated,
                                                 str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
                                                 ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc
                                                 FROM substance sub
@@ -205,7 +205,7 @@ class Connector():
             :return exp_endpoint_ann:
         """
 
-        exp_endpoint_ann = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid."name", sub.mol_formula_curated,
+        exp_endpoint_ann = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid.id as chem_id, cid."name", sub.mol_formula_curated,
                                                 str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
                                                 ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc
                                                 FROM experimental_endpoint_annotation ep

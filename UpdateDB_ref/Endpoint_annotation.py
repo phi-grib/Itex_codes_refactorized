@@ -321,7 +321,7 @@ class Endpoint(UpdateDB):
             cmr = row['cmr']
             pbt = row['pbt']
             vpvb = row['vpvb']
-            endoc = row['endocrine disruptor']
+            endoc = row['endocrine_disruptor']
             c = row['c']
             m = row ['m']
             r = row['r']
