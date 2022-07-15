@@ -138,10 +138,11 @@ class Connector():
         """
 
         substance_structures = pd.read_sql_query("""SELECT s.class_name_curated, s.preferred_name_curated, cid."name" , struc.chem_id, struc."structure",
-                                                struc.structure_curated, struc.substance_type_id
+                                                struc.structure_curated, struc.substance_type_id, st.type
                                                 FROM substance_structure struc
                                                 left join chem_id cid on cid.id = struc.chem_id 
                                                 left join substance s on s.chem_id = struc.chem_id 
+                                                left join substance_type st on st.id = struc.substance_type_id
                                                 order by struc.subs_id ASC""", self.conn)
 
         return substance_structures
