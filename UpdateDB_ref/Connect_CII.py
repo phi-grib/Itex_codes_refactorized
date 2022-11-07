@@ -413,6 +413,53 @@ class Connector():
 
         return regulations_with_id
     
+    def get_substances_with_merged_sources_and_exp_annotations(self) -> pd.DataFrame:
+        """
+            Merges the experimental annotations with the source's ones to have a proper dataframe containing all the information
+            regarding endpoint annotations
+
+            :return merged_dataframe:
+        """
+
+        sources = self.get_substances_with_endpoint_annotations_and_structure()
+        experimental = self.get_substances_with_experimental_endpoint_annotation_and_structure()
+        
+        sources.rename(columns={'name':'CAS'}, inplace=True)
+        experimental.rename(columns={'name':'CAS'}, inplace=True)
+
+        endpoint_list = ['cmr', 'pbt', 'vpvb', 'endocrine_disruptor', 
+        'c', 'm', 'r', 'p', 'b', 't', 'vp', 'vb', 'androgen_rc', 'estrogen_rc']
+
+        for i, row in sources.iterrows():
+            source_cas = row['CAS']
+            if source_cas in experimental.CAS.values:
+                exp_ans = experimental.loc[experimental['CAS'] == source_cas, endpoint_list]
+                exp_ans_dict = self.proper_dict(exp_ans)
+                for key,value in exp_ans_dict.items():
+                    if sources.loc[sources.index == i, key].values != 'YES':
+                        sources.loc[sources.index==i, key] = value
+        
+        return sources
+    
+    def proper_dict(self, experimental_dataframe: pd.DataFrame) -> dict:
+        """
+            Converts the experimental dataframe into a dictionary of annotations and values
+
+            :param experimental_dataframe: dataframe with experimental endpoint annotations
+
+            :return proper_dict: dictionary with the number of experimental annotations per endpoint
+        """
+        
+        dict_ = experimental_dataframe.to_dict('records')
+        proper_dict = {}
+        for key, value in dict_[0].items():
+            if value == 'No information':
+                pass
+            else:
+                proper_dict.update({key:value})
+        
+        return proper_dict
+
     # List of regulation dataframes to iterate over
 
     def get_dict_of_regulation_dataframes(self) -> dict:
