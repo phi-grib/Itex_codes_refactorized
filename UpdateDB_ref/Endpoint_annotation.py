@@ -332,13 +332,14 @@ class Endpoint(UpdateDB):
             vb = row['vb']
             ar = row['androgen_rc']
             er = row['estrogen_rc']
-            gr = row['glucocorticoid_receptor']
+            gr = row['glucocorticoid_rc']
+            tr = row['thyroid_rc']
 
-            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er, gr,table_name)
+            self.add_annotation(chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er, gr,tr,table_name)
     
     def add_annotation(self, chem_id: int, cmr: str, pbt: str, vpvb: str, endoc: str,
                         c: str, m: str, r: str, p: str, b: str, t: str, vp: str, vb: str, 
-                        ar: str, er: str, gr: str, table_name: str):
+                        ar: str, er: str, gr: str, tr:str, table_name: str):
         """
             Adds new annotation into database.
             Checks if there is already one and updates it if necessary
@@ -369,6 +370,7 @@ class Endpoint(UpdateDB):
             ar_db = ep_list[15]
             er_db = ep_list[16]
             gr_db = ep_list[17]
+            tr_db = ep_list[18]
             
             self.update_annotations('cmr',cmr_db,cmr,chem_id,table_name)
             self.update_annotations('pbt',pbt_db,pbt,chem_id,table_name)
@@ -384,13 +386,14 @@ class Endpoint(UpdateDB):
             self.update_annotations('vb',vb_db,vb,chem_id,table_name)
             self.update_annotations('androgen_rc',ar_db,ar,chem_id,table_name)
             self.update_annotations('estrogen_rc',er_db,er,chem_id,table_name)
-            self.update_annotations('glucocorticoid_receptor',gr_db,gr,chem_id,table_name)
+            self.update_annotations('glucocorticoid_rc',gr_db,gr,chem_id,table_name)
+            self.update_annotations('thyroid_rc',tr_db,tr,chem_id,table_name)
         else:
             max_id_cmd = """SELECT max(id) from {}""".format(table_name)
-            insert_query = """INSERT INTO """+table_name+""" (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor, c,m,r,p,b,t,vp,vb,androgen_rc,estrogen_rc,glucocorticoid_receptor)
-                             VALUES ({},{},'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"""
+            insert_query = """INSERT INTO """+table_name+""" (id, chem_id, cmr, pbt, vpvb, endocrine_disruptor, c,m,r,p,b,t,vp,vb,androgen_rc,estrogen_rc,glucocorticoid_rc,thyroid_rc)
+                             VALUES ({},{},'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"""
             
-            self.insert_in_database(max_id_cmd,insert_query,chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er,gr)
+            self.insert_in_database(max_id_cmd,insert_query,chem_id,cmr,pbt,vpvb,endoc,c,m,r,p,b,t,vp,vb,ar,er,gr,tr)
 
     def update_annotations(self, endpoint: str, old_endpoint_annotation: str, new_endpoint_annotation: str, chem_id: int, table_name: str):
         """
