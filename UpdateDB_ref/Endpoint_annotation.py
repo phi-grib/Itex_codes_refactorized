@@ -112,6 +112,8 @@ class Endpoint(UpdateDB):
             total_annotations_endpoint.loc[total_annotations_endpoint.index == i, 'NO'] = no_count
             total_annotations_endpoint.loc[total_annotations_endpoint.index == i, 'No information'] = no_info_count
 
+        total_annotations_endpoint.loc[:, 'Total annotations'] = total_annotations_endpoint.sum(axis=1)
+        
         return total_annotations_endpoint
 
     def check_presence_in_table(self, chem_id: int, annotations: str) -> pd.DataFrame:
