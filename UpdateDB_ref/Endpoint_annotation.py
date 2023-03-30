@@ -5,6 +5,7 @@
 
 import numpy as np
 import pandas as pd
+import sys
 
 from typing import Optional
 
@@ -433,3 +434,33 @@ class Endpoint(UpdateDB):
             endpoints_ = None
         
         return endpoints_
+
+    def calculate_gap_filling(self, endpoint: str) -> pd.DataFrame:
+        """
+            Function that calls gap filling object and returns a dataframe with the calculation.
+
+            :param endpoint: endpoint to calculate.
+
+            :return gap_filling_frame: gap filling dataframe
+        """
+
+        endpoint_list = ['cmr', 'pbt', 'vpvb', 'ed']
+
+        if endpoint.lower() not in endpoint_list:
+            sys.stderr.write('Wrong endpoint added. Please write one of the following: {}\n'.format(endpoint_list))
+            sys.exit(1)
+            
+        from .gap_filling import GapFillingCalculator as gapfill
+
+        substances_cii = self.get_substances_with_merged_sources_and_exp_annotations()
+
+        model_preds = pd.read_sql_query("""select ci."name", p.value, md.endpoint, md.creation_date 
+                                        from predictions p 
+                                        join chem_id ci on ci.id = p.chem_id
+                                        join model_detail md on md.id = p.modelid 
+                                        order by p.modelid, p.chem_id """,self.conn)
+        
+        Gap_filling = gapfill(substances_cii=substances_cii, model_predictions=model_preds)
+        gap_filling_frame = Gap_filling.merge_source_ans_and_preds(endpoint=endpoint)
+
+        return gap_filling_frame

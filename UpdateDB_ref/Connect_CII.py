@@ -415,11 +415,12 @@ class Connector():
 
         return regulations_with_id
     
-    def get_substances_with_merged_sources_and_exp_annotations(self) -> pd.DataFrame:
+    def get_substances_with_merged_sources_and_exp_annotations(self, remove_class: bool = False) -> pd.DataFrame:
         """
             Merges the experimental annotations with the source's ones to have a proper dataframe containing all the information
             regarding endpoint annotations
-
+            
+            :param remove_class: boolean. If True, removes class name and only takes into account preferred name curated, which is changed into name.
             :return merged_dataframe:
         """
 
@@ -441,9 +442,10 @@ class Connector():
                     if sources.loc[sources.index == i, key].values != 'YES':
                         sources.loc[sources.index==i, key] = value
         
-        sources.loc[sources['preferred_name_curated'].isna(),'preferred_name_curated'] = sources.loc[sources['preferred_name_curated'].isna(),'class_name_curated']
-        sources.drop('class_name_curated', axis=1, inplace=True)
-        sources.rename(columns={'preferred_name_curated':'name'},inplace = True)
+        if remove_class:
+            sources.loc[sources['preferred_name_curated'].isna(),'preferred_name_curated'] = sources.loc[sources['preferred_name_curated'].isna(),'class_name_curated']
+            sources.drop('class_name_curated', axis=1, inplace=True)
+            sources.rename(columns={'preferred_name_curated':'name'},inplace = True)
 
         return sources
     
