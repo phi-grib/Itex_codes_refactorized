@@ -187,8 +187,9 @@ class Connector():
         """
         
         sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid.id as chem_id, cid."name", sub.mol_formula_curated,
-                                                str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
+                                                str.structure, str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
                                                 ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc, ep.glucocorticoid_rc, ep.thyroid_rc
+                                                --ep.ppar,ep.ahr,ep.rxr,ep.rora,ep.nr3c2,ep.nr1d3,ep.pxr
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
                                                 left join substance_structure str on str.chem_id = cid.id
@@ -208,8 +209,9 @@ class Connector():
         """
 
         exp_endpoint_ann = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid.id as chem_id, cid."name", sub.mol_formula_curated,
-                                                str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
-                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc, ep.glucocorticoid_rc, ep.thyroid_rc
+                                                str.structure, str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
+                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc, ep.glucocorticoid_rc, ep.thyroid_rc,
+                                                ep.ppar,ep.ahr,ep.rxr,ep.rora,ep.nr3c2,ep.nr1d3,ep.pxr
                                                 FROM experimental_endpoint_annotation ep
                                                 left join substance sub on sub.chem_id = ep.chem_id 
                                                 left join chem_id cid on ep.chem_id = cid.id 
@@ -430,8 +432,13 @@ class Connector():
         sources.rename(columns={'name':'CAS'}, inplace=True)
         experimental.rename(columns={'name':'CAS'}, inplace=True)
 
+
         endpoint_list = ['cmr', 'pbt', 'vpvb', 'endocrine_disruptor', 
         'c', 'm', 'r', 'p', 'b', 't', 'vp', 'vb', 'androgen_rc', 'estrogen_rc', 'glucocorticoid_rc', 'thyroid_rc']
+
+        # endpoint_list = ['cmr', 'pbt', 'vpvb', 'endocrine_disruptor', 
+        # 'c', 'm', 'r', 'p', 'b', 't', 'vp', 'vb', 'androgen_rc', 'estrogen_rc', 'glucocorticoid_rc', 'thyroid_rc',
+        # 'ppar','ahr','rxr','rora','nr3c2','nr1d3','pxr']
 
         for i, row in sources.iterrows():
             source_cas = row['CAS']
