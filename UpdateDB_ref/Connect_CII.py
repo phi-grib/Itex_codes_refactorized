@@ -188,8 +188,8 @@ class Connector():
         
         sub_ann_struc = pd.read_sql_query("""SELECT sub.class_name_curated, sub.preferred_name_curated, cid.id as chem_id, cid."name", sub.mol_formula_curated,
                                                 str.structure, str.structure_curated, st.type, ep.cmr, ep.pbt, ep.vpvb, ep.endocrine_disruptor, ep.c, ep.m, 
-                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc, ep.glucocorticoid_rc, ep.thyroid_rc
-                                                --ep.ppar,ep.ahr,ep.rxr,ep.rora,ep.nr3c2,ep.nr1h3,ep.pxr
+                                                ep.r, ep.p, ep.b, ep.t, ep.vp, ep.vb, ep.androgen_rc, ep.estrogen_rc, ep.glucocorticoid_rc, ep.thyroid_rc,
+                                                ep.ppar,ep.ahr,ep.rxr,ep.rora,ep.nr3c2,ep.nr1h3,ep.pxr
                                                 FROM substance sub
                                                 left join chem_id cid on sub.chem_id = cid.id 
                                                 left join substance_structure str on str.chem_id = cid.id
@@ -448,7 +448,7 @@ class Connector():
                 for key,value in exp_ans_dict.items():
                     if sources.loc[sources.index == i, key].values != 'YES':
                         sources.loc[sources.index==i, key] = value
-        
+
         if remove_class:
             sources.loc[sources['preferred_name_curated'].isna(),'preferred_name_curated'] = sources.loc[sources['preferred_name_curated'].isna(),'class_name_curated']
             sources.drop('class_name_curated', axis=1, inplace=True)

@@ -162,7 +162,7 @@ class Endpoint(UpdateDB):
         
         chem_id_annotations = pd.read_sql_query(query_, conn)
         chem_id_annotations.drop_duplicates(inplace=True)
-
+        
         return chem_id_annotations
     
     def check_cr_source(self, endpoint: str, chem_id_annotations: pd.DataFrame) -> str:
