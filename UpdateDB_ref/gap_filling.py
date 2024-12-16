@@ -5,10 +5,11 @@
     On: 30/03/2023, 15:05 PM
 """
 
+import numpy as np
 import pandas as pd
 
 from natsort import natsorted
-from typing import Tuple
+from typing import Tuple, Union
 
 class GapFillingCalculator(object):
     """
@@ -21,8 +22,8 @@ class GapFillingCalculator(object):
         """
 
         self.subs = self.process_substances_cii(substances_cii)
-        self.model_preds = self.process_model_predictions_dataframe(model_predictions)
-    
+        self.model_preds = self.process_model_predictions_dataframe(substances_cii, model_predictions)
+
     def process_substances_cii(self, substances_cii: pd.DataFrame) -> pd.DataFrame:
         """
             Generates a prepared dataframe to be used for calculations.
@@ -47,7 +48,7 @@ class GapFillingCalculator(object):
 
         return eps_clean
 
-    def process_model_predictions_dataframe(self, model_predictions: pd.DataFrame) -> pd.DataFrame:
+    def process_model_predictions_dataframe(self, substances_cii: pd.DataFrame, model_predictions: pd.DataFrame) -> pd.DataFrame:
         """
             Generateds a prepared dataframe to be used for calculations
 
@@ -56,7 +57,8 @@ class GapFillingCalculator(object):
             :return grouped_ans: dataframe with grouped annotations per model and endpoint
         """
 
-        group = model_predictions.groupby(['endpoint'])['value'].value_counts()
+        new_predicted_compounds = self.get_new_predicted_compounds(substances_cii, model_predictions)
+        group = new_predicted_compounds.groupby(['endpoint'])['value'].value_counts()
         
         grouped_ans = pd.DataFrame(group.unstack(level=0).to_records())
 
@@ -64,6 +66,32 @@ class GapFillingCalculator(object):
         grouped_ans.loc[grouped_ans['value'] == 'YES', 'value'] = 'YES + Pending'
 
         return grouped_ans
+
+    def get_new_predicted_compounds(self, substances_cii: pd.DataFrame, model_predictions: pd.DataFrame) -> pd.DataFrame:
+        """
+            Gets the compounds that were non informed and now have a predicted annotations.
+            Removes compounds previously informed in CII.
+
+            :param model_precitions: dataframe containing the predictions for each endpoint and model version
+
+            :return new_predicted_compounds: dataframe containing only newly annotated compounds
+        """
+
+        cmr_non_informed_cas = substances_cii.loc[substances_cii['cmr'] == 'No information', 'CAS'].values
+        pbt_non_informed_cas = substances_cii.loc[substances_cii['pbt'] == 'No information', 'CAS'].values
+        vpvb_non_informed_cas = substances_cii.loc[substances_cii['vpvb'] == 'No information', 'CAS'].values
+        ed_non_informed_cas = substances_cii.loc[substances_cii['endocrine_disruptor'] == 'No information', 'CAS'].values
+
+        new_predicted_compounds = model_predictions.loc[((model_predictions['endpoint'].str.contains('CMR')) &
+                                                        (model_predictions['name'].isin(cmr_non_informed_cas))) |
+                                                        ((model_predictions['endpoint'].str.contains('PBT')) &
+                                                        (model_predictions['name'].isin(pbt_non_informed_cas))) |
+                                                        ((model_predictions['endpoint'].str.contains('vPvB')) &
+                                                        (model_predictions['name'].isin(vpvb_non_informed_cas))) |
+                                                        ((model_predictions['endpoint'].str.contains('ED')) &
+                                                        (model_predictions['name'].isin(ed_non_informed_cas)))]
+
+        return new_predicted_compounds
 
     def get_cols_endpoint(self, df: pd.DataFrame, endpoint: str) -> list:
         """
@@ -103,6 +131,69 @@ class GapFillingCalculator(object):
             
         return endpoint_cii, endpoint_preds
     
+    def process_column_no_info(self, col: np.ndarray, cii_no_info: Union[int, float]) -> np.ndarray:
+        """
+            Process a single column of the DataFrame.
+            
+            Args:
+            col (np.ndarray): The column to process.
+            cii_no_info (Union[int, float]): The 'No information' value from the cii column.
+            
+            Returns:
+            np.ndarray: The processed column.
+            
+            This function does the following:
+            1. Sums the 'NO' and 'YES + Pending' values (index 0 and 2).
+            2. Subtracts this sum from the cii 'No information' value.
+            3. Adds the result to the column's 'No information' value (index 1).
+        """
+
+        no_yes_sum = col[0] + col[2]  # Sum of NO and YES + Pending
+        col[1] = cii_no_info - no_yes_sum # Adjust No information
+
+        return col
+
+    def add_cii_values(self, col: np.ndarray, cii_no: Union[int, float], cii_yes_pending: Union[int, float]) -> np.ndarray:
+        """
+            Add cii NO and YES + Pending values to the corresponding cells in the column.
+            
+            Args:
+            col (np.ndarray): The column to process.
+            cii_no (Union[int, float]): The 'NO' value from the cii column.
+            cii_yes_pending (Union[int, float]): The 'YES + Pending' value from the cii column.
+            
+            Returns:
+            np.ndarray: The processed column.
+        """
+
+        col[0] += cii_no  # Add cmr_cii NO to NO
+        col[2] += cii_yes_pending  # Add cmr_cii YES + Pending to YES + Pending
+        
+        return col
+
+    def add_total_space (self, col: np.ndarray) -> np.ndarray:
+        """
+            Calculate the total space for a given column.
+
+            This function sums up the values in the first three elements of the input array,
+            which typically represent 'NO', 'No information', and 'YES + Pending' categories.
+
+            Args:
+            self: The instance of the class this method belongs to.
+            col (np.ndarray): The column to process, expected to be a NumPy array.
+
+            Returns:
+            np.ndarray: A single-element array containing the total space (sum of the first three elements).
+
+            Note:
+            - This function assumes that the input array has at least three elements.
+            - The returned value represents the total chemical space covered by all categories.
+        """
+
+        total_space = col[0] + col[1] + col[2]
+
+        return total_space
+
     def merge_source_ans_and_preds(self, endpoint: str) -> pd.DataFrame:
         """
             Merges the source annotations with the predictions in one dataframe to ultimately calculate the gap filling
@@ -121,19 +212,32 @@ class GapFillingCalculator(object):
         
         # Remove NaNs for 0 to avoid sum problems
         merged_df = merged_df.fillna(0)
+
+        # Calculate the reduction of the No information in cii for each column
+        # It uses the current NO and YES + Pending to subtract to No information
         
+        # Get the necessary values from cii
+        cii_no_info: float = merged_df.loc[merged_df['value'] == 'No information', [col for col in merged_df.columns if 'cii' in col][0]].values[0]
+        cii_no: float = merged_df.loc[merged_df['value'] == 'NO', [col for col in merged_df.columns if 'cii' in col][0]].values[0]
+        cii_yes_pending: float = merged_df.loc[merged_df['value'] == 'YES + Pending', [col for col in merged_df.columns if 'cii' in col][0]].values[0]
+
+        # Apply the functions to each column except 'value' and 'cmr_cii'
+        for column in merged_df.columns[2:]:  # Start from the third column
+            merged_df[column] = self.process_column_no_info(merged_df[column].values, cii_no_info)
+            merged_df[column] = self.add_cii_values(merged_df[column].values, cii_no, cii_yes_pending)
+
         # Calculate informed space (YES + NO)
         merged_df.loc[3] = merged_df.iloc[[0,2]].sum()
         
         # Clean new value in row 3
         merged_df.iloc[3,0] = 'Informed space'
-        
+
         # Total space is the sum of all annotations from CII.
         # Models can't process all compounds, so if we sum all the annotations obtained from them
         # we will not take into account all the chemical space we have collected
-        merged_df.loc[4] = merged_df[cii_endpoint_format].values[0:3].sum()
+        merged_df.loc[4] = [self.add_total_space(merged_df[column].values) for column in merged_df.columns]
         merged_df.iloc[4,0] = 'Total space'
-        
+
         # Gap filling calculation in percentage
         merged_df.loc[5] = 'Gap filling (%)'
         merged_df.iloc[5,1:] = (merged_df.iloc[3,1:] / merged_df.iloc[4,1:]) * 100
