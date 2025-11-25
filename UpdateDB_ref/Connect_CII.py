@@ -54,7 +54,7 @@ class Connector():
 
         self.compounddb_conn = it.openconnection(host='172.20.16.74', password='DBAdmin')
 
-    def nan_to_null(self, f, _NULL: str =AsIs('NULL'), _NaN: np.nan =np.NaN, _Float: float =Float) -> Union[float,str]:
+    def nan_to_null(self, f, _NULL: str =AsIs('NULL'), _NaN: np.nan =np.nan, _Float: float =Float) -> Union[float,str]:
         """
             Special function to handle NaN values from numpy when passed as part of a query in postgres.
             NaN should be interpreted as NULL.
