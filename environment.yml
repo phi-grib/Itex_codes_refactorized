@@ -8,6 +8,7 @@ dependencies:
   - aiofiles=22.1.0=pyhd8ed1ab_0
   - aiosqlite=0.20.0=pyhd8ed1ab_0
   - anyio=3.7.1=pyhd8ed1ab_0
+  - appdirs=1.4.4=pyhd3eb1b0_0
   - argon2-cffi=23.1.0=pyhd8ed1ab_0
   - argon2-cffi-bindings=25.1.0=py310h7c4b9e2_2
   - arrow=1.2.3=pyhd8ed1ab_0
@@ -57,6 +58,7 @@ dependencies:
   - greenlet=3.2.4=py310hea6c23e_1
   - icu=75.1=he02047a_0
   - idna=3.10=pyhd8ed1ab_0
+  - imbalanced-learn=0.14.0=pyhd8ed1ab_0
   - importlib-metadata=4.11.4=py310hff52083_0
   - importlib_metadata=4.11.4=hd8ed1ab_0
   - importlib_resources=6.0.0=pyhd8ed1ab_0
